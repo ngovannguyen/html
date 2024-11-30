@@ -1,0 +1,578 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <html lang="en">
+        <html>
+            <head>
+             <title>
+              VUA CHĂN GỐI
+             </title>
+             <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" rel="styles.css"/>
+             <link rel="stylesheet" href="styles.css">
+             <style>
+              body {
+                       margin: 0;
+                       font-family: Arial, sans-serif;
+                   }
+                   .logo {
+                            width: 150px; 
+                            height: auto; 
+                            transition: all 0.3s ease; 
+                        }
+                   .top-bar {
+                       background-color: #000;
+                       color: #fff;
+                       padding: 10px 0;
+                       text-align: center;
+                       font-size: 14px;
+                   }
+                   .top-bar a {
+                       color: #fff;
+                       text-decoration: none;
+                   }
+                   .hotline {
+                       background-color: #d32f2f;
+                       color: #fff;
+                       text-align: center;
+                       padding: 5px 0;
+                       font-size: 14px;
+                   }
+                   .header {
+                       display: flex;
+                       justify-content: space-between;
+                       align-items: center;
+                       padding: 10px 20px;
+                       background-color: #fff;
+                       border-bottom: 1px solid #ddd;
+                   }
+                   .header .logo {
+                       font-size: 28px;
+                       font-weight: bold;
+                       color: #333;
+                   }
+                   .header .logo img {
+                       height: 40px;
+                   }
+                   .header .nav-links {
+                       display: flex;
+                       align-items: center;
+                   }
+                   .header .nav-links a {
+                       margin: 0 10px;
+                       color: #333;
+                       text-decoration: none;
+                       font-size: 16px;
+                   }
+                   .header .nav-links a:hover {
+                       text-decoration: underline;
+                   }
+                   .header .nav-links .icon {
+                       margin-right: 5px;
+                   }
+                   .header .search-bar {
+                       display: flex;
+                       align-items: center;
+                       border: 1px solid #ddd;
+                       border-radius: 20px;
+                       padding: 5px 10px;
+                   }
+                   .header .search-bar input {
+border: none;
+                       outline: none;
+                       padding: 5px;
+                       font-size: 16px;
+                   }
+                   .header .search-bar button {
+                       background: none;
+                       border: none;
+                       cursor: pointer;
+                       font-size: 16px;
+                       color: #333;
+                   }
+                   .header .account-cart {
+                       display: flex;
+                       align-items: center;
+                   }
+                   .header .account-cart a {
+                       margin: 0 10px;
+                       color: #333;
+                       text-decoration: none;
+                       font-size: 16px;
+                   }
+                   .header .account-cart .cart-count {
+                       background-color: #d32f2f;
+                       color: #fff;
+                       border-radius: 50%;
+                       padding: 2px 6px;
+                       font-size: 12px;
+                       margin-left: 5px;
+                   }
+             </style>
+            </head>
+            <body>
+             <div class="top-bar">
+              CHÀO MỪNG ĐẾN VỚI CỬA HÀNG CUAT T.DUONG VA V.NGUYÊN
+              <a href="#">
+               MUA SẮM THÔI
+              </a>
+              &gt;&gt;&gt;
+             </div>
+             <div class="hotline">
+              HOTLINE MIỄN PHÍ: 0912282006 & 0335135755
+             </div>
+             <div class="header">
+              <div class="nav-links">
+               <a href="#">
+                <i class="fas fa-map-marker-alt icon">
+                </i>
+                Cửa hàng
+               </a>
+               <a href="#">
+                <i class="fas fa-star icon">
+                </i>
+                Quyền lợi thành viên
+               </a>
+              </div>
+              <div class="logo">
+<img alt="Vua Nệm Logo" height="170" src="data:image/jpeg;base64,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" width="350"/>
+              </div>
+              <div class="account-cart">
+               <a href="#">
+                <i class="fas fa-user icon">
+                </i>
+                Tài khoản
+               </a>
+               <a href="#">
+                <i class="fas fa-shopping-cart icon">
+                </i>
+                Giỏ hàng
+                <span class="cart-count">
+                 0
+                </span>
+               </a>
+              </div>
+             </div>
+             <div class="header">
+              <div class="nav-links">
+               <a href="#">
+                Nệm
+                <i class="fas fa-caret-down">
+                </i>
+               </a>
+               <a href="#">
+                Chăn ga
+                <i class="fas fa-caret-down">
+                </i>
+               </a>
+               <a href="#">
+                Phụ kiện
+<i class="fas fa-caret-down">
+                </i>
+               </a>
+               <a href="#">
+                Nội thất
+                <i class="fas fa-caret-down">
+                </i>
+               </a>
+               <a href="#">
+                Gối
+                <i class="fas fa-caret-down">
+                </i>
+               </a>
+               
+              </div>
+              <div class="search-bar">
+               <input placeholder="Tìm kiếm nhanh" type="text"/>
+               <button>
+                <i class="fas fa-search">
+                </i>
+               </button>
+              </div>
+             </div>
+            </body>
+           </html>
+           
+
+    </header>
+
+    
+    <html>
+        <head>
+         <title>
+          Product Page
+         </title>
+         <script src="https://cdn.tailwindcss.com">
+         </script>
+         <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" rel="stylesheet"/>
+         <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&amp;display=swap" rel="stylesheet"/>
+         <style>
+          body {
+                   font-family: 'Roboto', sans-serif;
+               }
+         </style>
+        </head>
+        <body class="bg-gray-100">
+         <div class="bg-gray-800 text-white py-4">
+          <div class="container mx-auto flex justify-center space-x-8">
+           <a class="text-white font-bold" href="#">
+            Nệm
+           </a>
+           <a class="text-gray-400" href="#">
+            Gối
+           </a>
+           <a class="text-gray-400" href="#">
+            Ga trải giường
+           </a>
+           <a class="text-gray-400" href="#">
+            Phụ kiện
+           </a>
+          </div>
+         </div>
+         <div class="container mx-auto py-8">
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+           <!-- Product Card 1 -->
+           <div class="bg-white p-4 rounded-lg shadow-md relative">
+            <div class="absolute top-2 right-2 bg-red-600 text-white text-xs px-2 py-1 rounded-full">
+             -20%
+            </div>
+            <img alt="Image of a bed with green wall background" class="w-full h-48 object-cover rounded-t-lg" height="200" src="https://storage.googleapis.com/a1aa/image/HMtqVHFhcLqLE5zex6h8QHRtBAWzlcr2crsh8QKlkptZE04JA.jpg" width="300"/>
+            <div class="mt-4">
+             <div class="flex items-center text-yellow-500">
+              <span>
+               4.9/5
+              </span>
+              <i class="fas fa-star ml-1">
+              </i>
+              <span class="text-gray-500 ml-2">
+               (203)
+              </span>
+             </div>
+             <p class="text-gray-700 mt-2">
+              (QUÀ TẶNG 7 MÓN VỚI ĐỘ DÀY 10CM) NỆM CAO SU THIÊN NHIÊN
+             </p>
+             <div class="text-red-600 text-xl font-bold mt-2">
+              6.312.000đ
+             </div>
+<div class="text-gray-500 line-through">
+              7.890.000đ
+             </div>
+             <div class="flex items-center mt-2">
+              <button class="bg-red-600 text-white px-2 py-1 rounded-full text-xs">
+               Tất cả các tùy thể
+              </button>
+              <button class="bg-gray-200 text-gray-700 px-2 py-1 rounded-full text-xs ml-2">
+               7 Kích thước
+              </button>
+             </div>
+             <div class="text-gray-500 text-sm mt-2">
+              9561 sản phẩm đã bán
+             </div>
+             <button class="bg-red-800 text-white px-2 py-1 rounded-full text-xs" onclick="alert('Cảm ơn bạn đã mua hàng!')">Mua Ngay</button>
+            </div>
+           </div>
+          
+          
+           <!-- Product Card 2 -->
+           <div class="bg-white p-4 rounded-lg shadow-md relative">
+            <div class="absolute top-2 right-2 bg-red-600 text-white text-xs px-2 py-1 rounded-full">
+             -34%
+            </div>
+            <img alt="Image of a bed with beige wall background" class="w-full h-48 object-cover rounded-t-lg" height="200"
+src="data:image/jpeg;base64,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
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <html lang="en">
+        <html>
+            <head>
+             <title>
+              VUA CHĂN GỐI
+             </title>
+             <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" rel="styles.css"/>
+             <link rel="stylesheet" href="styles.css">
+             <style>
+              body {
+                       margin: 0;
+                       font-family: Arial, sans-serif;
+                   }
+                   .logo {
+                            width: 150px; 
+                            height: auto; 
+                            transition: all 0.3s ease; 
+                        }
+                   .top-bar {
+                       background-color: #000;
+                       color: #fff;
+                       padding: 10px 0;
+                       text-align: center;
+                       font-size: 14px;
+                   }
+                   .top-bar a {
+                       color: #fff;
+                       text-decoration: none;
+                   }
+                   .hotline {
+                       background-color: #d32f2f;
+                       color: #fff;
+                       text-align: center;
+                       padding: 5px 0;
+                       font-size: 14px;
+                   }
+                   .header {
+                       display: flex;
+                       justify-content: space-between;
+                       align-items: center;
+                       padding: 10px 20px;
+                       background-color: #fff;
+                       border-bottom: 1px solid #ddd;
+                   }
+                   .header .logo {
+                       font-size: 28px;
+                       font-weight: bold;
+                       color: #333;
+                   }
+                   .header .logo img {
+                       height: 40px;
+                   }
+                   .header .nav-links {
+                       display: flex;
+                       align-items: center;
+                   }
+                   .header .nav-links a {
+                       margin: 0 10px;
+                       color: #333;
+                       text-decoration: none;
+                       font-size: 16px;
+                   }
+                   .header .nav-links a:hover {
+                       text-decoration: underline;
+                   }
+                   .header .nav-links .icon {
+                       margin-right: 5px;
+                   }
+                   .header .search-bar {
+                       display: flex;
+                       align-items: center;
+                       border: 1px solid #ddd;
+                       border-radius: 20px;
+                       padding: 5px 10px;
+                   }
+                   .header .search-bar input {
+border: none;
+                       outline: none;
+                       padding: 5px;
+                       font-size: 16px;
+                   }
+                   .header .search-bar button {
+                       background: none;
+                       border: none;
+                       cursor: pointer;
+                       font-size: 16px;
+                       color: #333;
+                   }
+                   .header .account-cart {
+                       display: flex;
+                       align-items: center;
+                   }
+                   .header .account-cart a {
+                       margin: 0 10px;
+                       color: #333;
+                       text-decoration: none;
+                       font-size: 16px;
+                   }
+                   .header .account-cart .cart-count {
+                       background-color: #d32f2f;
+                       color: #fff;
+                       border-radius: 50%;
+                       padding: 2px 6px;
+                       font-size: 12px;
+                       margin-left: 5px;
+                   }
+             </style>
+            </head>
+            <body>
+             <div class="top-bar">
+              CHÀO MỪNG ĐẾN VỚI CỬA HÀNG CUAT T.DUONG VA V.NGUYÊN
+              <a href="#">
+               MUA SẮM THÔI
+              </a>
+              &gt;&gt;&gt;
+             </div>
+             <div class="hotline">
+              HOTLINE MIỄN PHÍ: 0912282006 & 0335135755
+             </div>
+             <div class="header">
+              <div class="nav-links">
+               <a href="#">
+                <i class="fas fa-map-marker-alt icon">
+                </i>
+                Cửa hàng
+               </a>
+               <a href="#">
+                <i class="fas fa-star icon">
+                </i>
+                Quyền lợi thành viên
+               </a>
+              </div>
+              <div class="logo">
+<img alt="Vua Nệm Logo" height="170" src="data:image/jpeg;base64,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" width="350"/>
+              </div>
+              <div class="account-cart">
+               <a href="#">
+                <i class="fas fa-user icon">
+                </i>
+                Tài khoản
+               </a>
+               <a href="#">
+                <i class="fas fa-shopping-cart icon">
+                </i>
+                Giỏ hàng
+                <span class="cart-count">
+                 0
+                </span>
+               </a>
+              </div>
+             </div>
+             <div class="header">
+              <div class="nav-links">
+               <a href="#">
+                Nệm
+                <i class="fas fa-caret-down">
+                </i>
+               </a>
+               <a href="#">
+                Chăn ga
+                <i class="fas fa-caret-down">
+                </i>
+               </a>
+               <a href="#">
+                Phụ kiện
+<i class="fas fa-caret-down">
+                </i>
+               </a>
+               <a href="#">
+                Nội thất
+                <i class="fas fa-caret-down">
+                </i>
+               </a>
+               <a href="#">
+                Gối
+                <i class="fas fa-caret-down">
+                </i>
+               </a>
+               
+              </div>
+              <div class="search-bar">
+               <input placeholder="Tìm kiếm nhanh" type="text"/>
+               <button>
+                <i class="fas fa-search">
+                </i>
+               </button>
+              </div>
+             </div>
+            </body>
+           </html>
+           
+
+    </header>
+
+    
+    <html>
+        <head>
+         <title>
+          Product Page
+         </title>
+         <script src="https://cdn.tailwindcss.com">
+         </script>
+         <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" rel="stylesheet"/>
+         <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&amp;display=swap" rel="stylesheet"/>
+         <style>
+          body {
+                   font-family: 'Roboto', sans-serif;
+               }
+         </style>
+        </head>
+        <body class="bg-gray-100">
+         <div class="bg-gray-800 text-white py-4">
+          <div class="container mx-auto flex justify-center space-x-8">
+           <a class="text-white font-bold" href="#">
+            Nệm
+           </a>
+           <a class="text-gray-400" href="#">
+            Gối
+           </a>
+           <a class="text-gray-400" href="#">
+            Ga trải giường
+           </a>
+           <a class="text-gray-400" href="#">
+            Phụ kiện
+           </a>
+          </div>
+         </div>
+         <div class="container mx-auto py-8">
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+           <!-- Product Card 1 -->
+           <div class="bg-white p-4 rounded-lg shadow-md relative">
+            <div class="absolute top-2 right-2 bg-red-600 text-white text-xs px-2 py-1 rounded-full">
+             -20%
+            </div>
+            <img alt="Image of a bed with green wall background" class="w-full h-48 object-cover rounded-t-lg" height="200" src="https://storage.googleapis.com/a1aa/image/HMtqVHFhcLqLE5zex6h8QHRtBAWzlcr2crsh8QKlkptZE04JA.jpg" width="300"/>
+            <div class="mt-4">
+             <div class="flex items-center text-yellow-500">
+              <span>
+               4.9/5
+              </span>
+              <i class="fas fa-star ml-1">
+              </i>
+              <span class="text-gray-500 ml-2">
+               (203)
+              </span>
+             </div>
+             <p class="text-gray-700 mt-2">
+              (QUÀ TẶNG 7 MÓN VỚI ĐỘ DÀY 10CM) NỆM CAO SU THIÊN NHIÊN
+             </p>
+             <div class="text-red-600 text-xl font-bold mt-2">
+              6.312.000đ
+             </div>
+<div class="text-gray-500 line-through">
+              7.890.000đ
+             </div>
+             <div class="flex items-center mt-2">
+              <button class="bg-red-600 text-white px-2 py-1 rounded-full text-xs">
+               Tất cả các tùy thể
+              </button>
+              <button class="bg-gray-200 text-gray-700 px-2 py-1 rounded-full text-xs ml-2">
+               7 Kích thước
+              </button>
+             </div>
+             <div class="text-gray-500 text-sm mt-2">
+              9561 sản phẩm đã bán
+             </div>
+             <button class="bg-red-800 text-white px-2 py-1 rounded-full text-xs" onclick="alert('Cảm ơn bạn đã mua hàng!')">Mua Ngay</button>
+            </div>
+           </div>
+          
+          
+           <!-- Product Card 2 -->
+           <div class="bg-white p-4 rounded-lg shadow-md relative">
+            <div class="absolute top-2 right-2 bg-red-600 text-white text-xs px-2 py-1 rounded-full">
+             -34%
+            </div>
+            <img alt="Image of a bed with beige wall background" class="w-full h-48 object-cover rounded-t-lg" height="200"
+src="data:image/jpeg;base64,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
