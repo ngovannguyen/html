@@ -1,0 +1,499 @@
+-- ============================================
+-- HỆ THỐNG: Quản lý dịch vụ vận chuyển (QLVanChuyen)
+-- Chạy trên SQL Server (SSMS)
+-- ============================================
+
+USE master;
+GO
+
+-- ====== XÓA DATABASE CŨ NẾU CẦN ======
+IF EXISTS (SELECT * FROM sys.databases WHERE name = 'QLVanChuyen')
+BEGIN
+    ALTER DATABASE QLVanChuyen SET SINGLE_USER WITH ROLLBACK IMMEDIATE;
+    DROP DATABASE QLVanChuyen;
+END
+GO
+
+-- ====== TẠO DATABASE MỚI ======
+CREATE DATABASE QLVanChuyen;
+GO
+
+USE QLVanChuyen;
+GO
+
+-- =========================
+-- 1) TẠO BẢNG
+-- =========================
+
+-- KHÁCH HÀNG
+CREATE TABLE KHACHHANG (
+    MaKH INT IDENTITY(1,1) PRIMARY KEY,
+    TenKH NVARCHAR(150) NOT NULL,
+    DiaChi NVARCHAR(250) NULL,
+    SoDienThoai VARCHAR(20) NULL,
+    SoDienThoai_Encrypted VARBINARY(MAX) NULL,
+    DiaChi_Encrypted VARBINARY(MAX) NULL
+);
+GO
+
+-- ĐƠN HÀNG
+CREATE TABLE DONHANG (
+    MaDH INT IDENTITY(1,1) PRIMARY KEY,
+    MaKH INT NOT NULL,
+    NgayDat DATETIME NOT NULL DEFAULT GETDATE(),
+    TrangThai NVARCHAR(50) NOT NULL DEFAULT N'Chờ xử lý',
+    GhiChu NVARCHAR(500) NULL,
+    CONSTRAINT FK_DONHANG_KH FOREIGN KEY (MaKH) REFERENCES KHACHHANG(MaKH)
+);
+GO
+
+-- PHƯƠNG TIỆN
+CREATE TABLE PHUONGTIEN (
+    MaPT INT IDENTITY(1,1) PRIMARY KEY,
+    LoaiPhuongTien NVARCHAR(100) NOT NULL,
+    BienSo NVARCHAR(50) NOT NULL,
+    GhiChu NVARCHAR(250) NULL
+);
+GO
+
+-- GIAO HÀNG
+CREATE TABLE GIAOHANG (
+    MaGH INT IDENTITY(1,1) PRIMARY KEY,
+    MaDH INT NOT NULL,
+    MaPT INT NOT NULL,
+    NgayGiao DATETIME NULL,
+    TinhTrang NVARCHAR(100) NULL,
+    CONSTRAINT FK_GIAOHANG_DH FOREIGN KEY (MaDH) REFERENCES DONHANG(MaDH),
+    CONSTRAINT FK_GIAOHANG_PT FOREIGN KEY (MaPT) REFERENCES PHUONGTIEN(MaPT)
+);
+GO
+
+-- CHI PHÍ
+CREATE TABLE CHIPHI (
+    MaCP INT IDENTITY(1,1) PRIMARY KEY,
+    MaGH INT NOT NULL,
+    LoaiChiPhi NVARCHAR(100) NOT NULL,
+    SoTien DECIMAL(18,2) NOT NULL CHECK (SoTien >= 0),
+    GhiChu NVARCHAR(250) NULL,
+    CONSTRAINT FK_CHIPHI_GH FOREIGN KEY (MaGH) REFERENCES GIAOHANG(MaGH)
+);
+GO
+
+-- =========================
+-- 2) TẠO INDEX (tối ưu tìm kiếm / báo cáo)
+-- =========================
+CREATE INDEX IX_KH_Ten ON KHACHHANG(TenKH);
+CREATE INDEX IX_DH_MaKH ON DONHANG(MaKH);
+CREATE INDEX IX_DH_TrangThai ON DONHANG(TrangThai);
+CREATE INDEX IX_GH_NgayGiao ON GIAOHANG(NgayGiao);
+CREATE INDEX IX_PT_BienSo ON PHUONGTIEN(BienSo);
+CREATE INDEX IX_CP_MaGH ON CHIPHI(MaGH);
+GO
+
+-- =========================
+-- 3) THÊM DỮ LIỆU MẪU
+-- =========================
+INSERT INTO KHACHHANG (TenKH, DiaChi, SoDienThoai) VALUES
+(N'Nguyễn Văn A', N'Hà Nội', '0912345678'),
+(N'Trần Thị B', N'Đà Nẵng', '0987654321'),
+(N'Phạm Văn C', N'Hải Phòng', '0909123123');
+GO
+
+INSERT INTO PHUONGTIEN (LoaiPhuongTien, BienSo, GhiChu) VALUES
+(N'Xe tải nhỏ', '29C-12345', N'Xe 1.25 tấn'),
+(N'Xe đầu kéo', '30F-67890', N'Container 20ft'),
+(N'Xe máy', '75F-54321', N'Giao hàng nhanh');
+GO
+
+INSERT INTO DONHANG (MaKH, NgayDat, TrangThai, GhiChu) VALUES
+(1, '2025-11-10', N'Chờ xử lý', N'Gói hàng A'),
+(2, '2025-11-11', N'Đang giao', N'Gói hàng B'),
+(3, '2025-11-12', N'Đã giao', N'Gói hàng C');
+GO
+
+INSERT INTO GIAOHANG (MaDH, MaPT, NgayGiao, TinhTrang) VALUES
+(1, 1, '2025-11-11 08:00:00', N'Chưa giao'),
+(2, 2, '2025-11-12 09:30:00', N'Đang giao'),
+(3, 3, '2025-11-13 14:00:00', N'Hoàn thành');
+GO
+
+INSERT INTO CHIPHI (MaGH, LoaiChiPhi, SoTien, GhiChu) VALUES
+(1, N'Nhiên liệu', 450000, N'Chi phí dự tính'),
+(1, N'Phí cầu đường', 120000, NULL),
+(2, N'Lương tài xế', 800000, NULL),
+(3, N'Nhiên liệu', 300000, NULL);
+GO
+
+-- =========================
+-- 4) VIEW tổng hợp thông tin vận chuyển
+-- =========================
+IF OBJECT_ID('dbo.vThongTinVanChuyen','V') IS NOT NULL DROP VIEW dbo.vThongTinVanChuyen;
+GO
+
+CREATE VIEW vThongTinVanChuyen AS
+SELECT
+    gh.MaGH,
+    dh.MaDH,
+    kh.MaKH,
+    kh.TenKH,
+    dh.TrangThai,
+    gh.NgayGiao,
+    pt.LoaiPhuongTien,
+    pt.BienSo,
+    ISNULL(SUM(cp.SoTien),0) AS TongChiPhi
+FROM GIAOHANG gh
+JOIN DONHANG dh ON gh.MaDH = dh.MaDH
+JOIN KHACHHANG kh ON dh.MaKH = kh.MaKH
+JOIN PHUONGTIEN pt ON gh.MaPT = pt.MaPT
+LEFT JOIN CHIPHI cp ON gh.MaGH = cp.MaGH
+GROUP BY gh.MaGH, dh.MaDH, kh.MaKH, kh.TenKH, dh.TrangThai, gh.NgayGiao, pt.LoaiPhuongTien, pt.BienSo;
+GO
+
+-- Test view
+SELECT TOP 100 * FROM vThongTinVanChuyen;
+GO
+
+-- =========================
+-- 5) TRIGGER: kiểm tra khi insert/update CHI PHÍ (SoTien >=0)
+-- =========================
+IF OBJECT_ID('trg_CheckChiPhi','TR') IS NOT NULL DROP TRIGGER trg_CheckChiPhi;
+GO
+
+CREATE TRIGGER trg_CheckChiPhi
+ON CHIPHI
+FOR INSERT, UPDATE
+AS
+BEGIN
+    SET NOCOUNT ON;
+    IF EXISTS (SELECT 1 FROM inserted WHERE SoTien < 0)
+    BEGIN
+        RAISERROR(N'Số tiền chi phí không được âm!',16,1);
+        ROLLBACK TRANSACTION;
+        RETURN;
+    END
+END;
+GO
+
+-- =========================
+-- 6) STORED PROCEDURES (thêm / cập nhật / báo cáo)
+-- =========================
+
+-- Thêm khách hàng, trả về ID
+IF OBJECT_ID('sp_ThemKhachHang','P') IS NOT NULL DROP PROCEDURE sp_ThemKhachHang;
+GO
+CREATE PROCEDURE sp_ThemKhachHang
+    @TenKH NVARCHAR(150),
+    @DiaChi NVARCHAR(250),
+    @SoDienThoai VARCHAR(20),
+    @NewMaKH INT OUTPUT
+AS
+BEGIN
+    SET NOCOUNT ON;
+    INSERT INTO KHACHHANG (TenKH, DiaChi, SoDienThoai)
+    VALUES (@TenKH, @DiaChi, @SoDienThoai);
+    SET @NewMaKH = SCOPE_IDENTITY();
+END;
+GO
+
+-- Tạo đơn hàng mới
+IF OBJECT_ID('sp_TaoDonHang','P') IS NOT NULL DROP PROCEDURE sp_TaoDonHang;
+GO
+CREATE PROCEDURE sp_TaoDonHang
+    @MaKH INT,
+    @TrangThai NVARCHAR(50),
+    @GhiChu NVARCHAR(500),
+    @NewMaDH INT OUTPUT
+AS
+BEGIN
+    SET NOCOUNT ON;
+    INSERT INTO DONHANG (MaKH, NgayDat, TrangThai, GhiChu)
+    VALUES (@MaKH, GETDATE(), @TrangThai, @GhiChu);
+    SET @NewMaDH = SCOPE_IDENTITY();
+END;
+GO
+
+-- Tạo giao hàng kèm chi phí (transaction)
+IF OBJECT_ID('sp_TaoGiaoHang_KemChiPhi','P') IS NOT NULL DROP PROCEDURE sp_TaoGiaoHang_KemChiPhi;
+GO
+CREATE PROCEDURE sp_TaoGiaoHang_KemChiPhi
+    @MaDH INT,
+    @MaPT INT,
+    @NgayGiao DATETIME,
+    @TinhTrang NVARCHAR(100),
+    @LoaiChiPhi NVARCHAR(100),
+    @SoTien DECIMAL(18,2),
+    @NewMaGH INT OUTPUT
+AS
+BEGIN
+    SET NOCOUNT ON;
+    BEGIN TRY
+        BEGIN TRAN;
+            INSERT INTO GIAOHANG (MaDH, MaPT, NgayGiao, TinhTrang)
+            VALUES (@MaDH, @MaPT, @NgayGiao, @TinhTrang);
+            SET @NewMaGH = SCOPE_IDENTITY();
+            INSERT INTO CHIPHI (MaGH, LoaiChiPhi, SoTien)
+            VALUES (@NewMaGH, @LoaiChiPhi, @SoTien);
+        COMMIT TRAN;
+    END TRY
+    BEGIN CATCH
+        IF XACT_STATE() <> 0 ROLLBACK TRAN;
+        DECLARE @msg NVARCHAR(4000) = ERROR_MESSAGE();
+        RAISERROR(@msg,16,1);
+    END CATCH
+END;
+GO
+
+-- Cập nhật trạng thái đơn hàng
+IF OBJECT_ID('sp_CapNhatTrangThaiDonHang','P') IS NOT NULL DROP PROCEDURE sp_CapNhatTrangThaiDonHang;
+GO
+CREATE PROCEDURE sp_CapNhatTrangThaiDonHang
+    @MaDH INT,
+    @TrangThaiMoi NVARCHAR(50)
+AS
+BEGIN
+    SET NOCOUNT ON;
+    UPDATE DONHANG SET TrangThai = @TrangThaiMoi WHERE MaDH = @MaDH;
+END;
+GO
+
+-- Lấy báo cáo tổng chi phí theo khoảng thời gian
+IF OBJECT_ID('sp_BaoCaoChiPhi','P') IS NOT NULL DROP PROCEDURE sp_BaoCaoChiPhi;
+GO
+CREATE PROCEDURE sp_BaoCaoChiPhi
+    @FromDate DATE,
+    @ToDate DATE
+AS
+BEGIN
+    SET NOCOUNT ON;
+    SELECT 
+        gh.MaGH, dh.MaDH, kh.TenKH, gh.NgayGiao,
+        SUM(cp.SoTien) AS TongChiPhi
+    FROM GIAOHANG gh
+    JOIN DONHANG dh ON gh.MaDH = dh.MaDH
+    JOIN KHACHHANG kh ON dh.MaKH = kh.MaKH
+    LEFT JOIN CHIPHI cp ON gh.MaGH = cp.MaGH
+    WHERE gh.NgayGiao BETWEEN @FromDate AND @ToDate
+    GROUP BY gh.MaGH, dh.MaDH, kh.TenKH, gh.NgayGiao;
+END;
+GO
+
+-- =========================
+-- 7) CURSOR MẪU: in tổng chi phí cho từng giao hàng
+-- =========================
+-- (ví dụ dùng khi cần xử lý hàng loạt - trong báo cáo)
+DECLARE @MaGH INT, @TongChiPhi DECIMAL(18,2);
+DECLARE cur_TongChiPhi CURSOR LOCAL FOR
+    SELECT MaGH FROM GIAOHANG;
+
+OPEN cur_TongChiPhi;
+FETCH NEXT FROM cur_TongChiPhi INTO @MaGH;
+WHILE @@FETCH_STATUS = 0
+BEGIN
+    SELECT @TongChiPhi = SUM(SoTien) FROM CHIPHI WHERE MaGH = @MaGH;
+    PRINT 'MaGH=' + CAST(@MaGH AS NVARCHAR(10)) + ' -> TongChiPhi=' + CAST(ISNULL(@TongChiPhi,0) AS NVARCHAR(20));
+    FETCH NEXT FROM cur_TongChiPhi INTO @MaGH;
+END
+CLOSE cur_TongChiPhi;
+DEALLOCATE cur_TongChiPhi;
+GO
+
+-- =========================
+-- 8) MÃ HÓA DỮ LIỆU (Database Master Key, Certificate, Symmetric Key)
+--     Mã hóa SoDienThoai & DiaChi trong KHACHHANG
+-- =========================
+
+-- 1. Tạo Master Key (nếu chưa có)
+IF NOT EXISTS (SELECT * FROM sys.symmetric_keys WHERE name = '##MS_DatabaseMasterKey##')
+BEGIN
+    CREATE MASTER KEY ENCRYPTION BY PASSWORD = 'StrongMasterKey@2025!';
+END
+GO
+
+-- 2. Tạo Certificate (nếu chưa có)
+IF NOT EXISTS (SELECT * FROM sys.certificates WHERE name = 'Cert_QLVanChuyen')
+BEGIN
+    CREATE CERTIFICATE Cert_QLVanChuyen
+    WITH SUBJECT = 'Cert cho QLVanChuyen';
+END
+GO
+
+-- 3. Tạo Symmetric Key AES_256 (nếu chưa có)
+IF NOT EXISTS (SELECT * FROM sys.symmetric_keys WHERE name = 'SymKey_QLVanChuyen')
+BEGIN
+    CREATE SYMMETRIC KEY SymKey_QLVanChuyen
+    WITH ALGORITHM = AES_256
+    ENCRYPTION BY CERTIFICATE Cert_QLVanChuyen;
+END
+GO
+
+-- Mã hóa dữ liệu hiện có (mở key -> update -> đóng key)
+OPEN SYMMETRIC KEY SymKey_QLVanChuyen DECRYPTION BY CERTIFICATE Cert_QLVanChuyen;
+GO
+
+UPDATE KHACHHANG
+SET
+    SoDienThoai_Encrypted = EncryptByKey(Key_GUID('SymKey_QLVanChuyen'), CAST(SoDienThoai AS NVARCHAR(200))),
+    DiaChi_Encrypted = EncryptByKey(Key_GUID('SymKey_QLVanChuyen'), CAST(DiaChi AS NVARCHAR(500)))
+WHERE SoDienThoai IS NOT NULL OR DiaChi IS NOT NULL;
+GO
+
+CLOSE SYMMETRIC KEY SymKey_QLVanChuyen;
+GO
+
+-- Truy vấn mẫu giải mã (mở key để xem)
+OPEN SYMMETRIC KEY SymKey_QLVanChuyen DECRYPTION BY CERTIFICATE Cert_QLVanChuyen;
+GO
+SELECT 
+    MaKH, TenKH,
+    SoDienThoai_Encrypted,
+    CAST(DecryptByKey(SoDienThoai_Encrypted) AS NVARCHAR(200)) AS SoDienThoai_GiaiMa,
+    DiaChi_Encrypted,
+    CAST(DecryptByKey(DiaChi_Encrypted) AS NVARCHAR(500)) AS DiaChi_GiaiMa
+FROM KHACHHANG;
+GO
+CLOSE SYMMETRIC KEY SymKey_QLVanChuyen;
+GO
+
+-- =========================
+-- 9) TẠO LOGIN / USER VÀ PHÂN QUYỀN
+-- =========================
+
+-- Login & user cho nhân viên vận chuyển (thao tác DonHang, GiaoHang, ChiPhi)
+USE master;
+GO
+IF NOT EXISTS (SELECT * FROM sys.server_principals WHERE name = 'nv_vanchuyen')
+BEGIN
+    CREATE LOGIN nv_vanchuyen WITH PASSWORD = 'VanChuyen@2025';
+END
+GO
+
+USE QLVanChuyen;
+GO
+IF NOT EXISTS (SELECT * FROM sys.database_principals WHERE name = 'nv_vanchuyen')
+BEGIN
+    CREATE USER nv_vanchuyen FOR LOGIN nv_vanchuyen;
+END
+GO
+
+GRANT SELECT, INSERT, UPDATE ON DONHANG TO nv_vanchuyen;
+GRANT SELECT, INSERT, UPDATE ON GIAOHANG TO nv_vanchuyen;
+GRANT SELECT, INSERT, UPDATE ON CHIPHI TO nv_vanchuyen;
+GRANT SELECT ON KHACHHANG TO nv_vanchuyen; -- chỉ xem KH
+GO
+
+-- Admin user (db_owner)
+USE master;
+GO
+IF NOT EXISTS (SELECT * FROM sys.server_principals WHERE name = 'admin_qlvanchuyen')
+BEGIN
+    CREATE LOGIN admin_qlvanchuyen WITH PASSWORD = 'AdminQLVan@2025';
+END
+GO
+
+USE QLVanChuyen;
+GO
+IF NOT EXISTS (SELECT * FROM sys.database_principals WHERE name = 'admin_qlvanchuyen')
+BEGIN
+    CREATE USER admin_qlvanchuyen FOR LOGIN admin_qlvanchuyen;
+    EXEC sp_addrolemember 'db_owner', 'admin_qlvanchuyen';
+END
+GO
+
+-- Viewer (chỉ đọc)
+USE master;
+GO
+IF NOT EXISTS (SELECT * FROM sys.server_principals WHERE name = 'viewer_qlvanchuyen')
+BEGIN
+    CREATE LOGIN viewer_qlvanchuyen WITH PASSWORD = 'Viewer@2025';
+END
+GO
+
+USE QLVanChuyen;
+GO
+IF NOT EXISTS (SELECT * FROM sys.database_principals WHERE name = 'viewer_qlvanchuyen')
+BEGIN
+    CREATE USER viewer_qlvanchuyen FOR LOGIN viewer_qlvanchuyen;
+    EXEC sp_addrolemember 'db_datareader', 'viewer_qlvanchuyen';
+END
+GO
+
+-- =========================
+-- 10) BACKUP & RESTORE (ví dụ đường dẫn — tùy chỉnh nếu cần)
+-- =========================
+USE master;
+GO
+
+-- Full backup (chạy nếu đường dẫn hợp lệ)
+BACKUP DATABASE QLVanChuyen
+TO DISK = 'D:\Backup\QLVanChuyen_full.bak'
+WITH INIT, NAME = 'Full Backup QLVanChuyen';
+GO
+
+-- Differential backup example
+BACKUP DATABASE QLVanChuyen
+TO DISK = 'D:\Backup\QLVanChuyen_diff.bak'
+WITH DIFFERENTIAL, NAME = 'Differential Backup QLVanChuyen';
+GO
+
+-- Transaction log backup (nếu cần)
+BACKUP LOG QLVanChuyen
+TO DISK = 'D:\Backup\QLVanChuyen_log.trn'
+WITH INIT, NAME = 'Transaction Log Backup QLVanChuyen';
+GO
+
+-- RESTORE HEADERONLY example (kiểm tra file)
+ RESTORE HEADERONLY FROM DISK = 'D:\Backup\QLVanChuyen_full.bak';
+ GO
+
+-- =========================
+-- 11) TẠO SQL AGENT JOB (Auto Backup hàng ngày 23:00)
+-- Lưu ý: cần bật SQL Server Agent và chạy trên môi trường cho phép T-SQL job creation
+-- =========================
+USE msdb;
+GO
+
+IF EXISTS (SELECT * FROM msdb.dbo.sysjobs WHERE name = N'AutoBackup_QLVanChuyen')
+BEGIN
+    EXEC sp_delete_job @job_name = N'AutoBackup_QLVanChuyen';
+END
+GO
+
+EXEC sp_add_job  
+    @job_name = N'AutoBackup_QLVanChuyen',  
+    @enabled = 1,  
+    @description = N'Tự động sao lưu cơ sở dữ liệu QLVanChuyen hằng ngày lúc 23h00';  
+GO
+
+EXEC sp_add_jobstep  
+    @job_name = N'AutoBackup_QLVanChuyen',  
+    @step_name = N'Sao luu full',  
+    @subsystem = N'TSQL',  
+    @command = N'
+        DECLARE @BackupFile NVARCHAR(200);
+        SET @BackupFile = N''D:\Backup\QLVanChuyen_'' + CONVERT(NVARCHAR(8), GETDATE(), 112) + ''.bak'';
+        BACKUP DATABASE QLVanChuyen
+        TO DISK = @BackupFile
+        WITH INIT, NAME = N''Auto Daily Backup QLVanChuyen'', STATS = 10;
+    ',  
+    @database_name = N'master';
+GO
+
+
+EXEC sp_add_jobserver  
+    @job_name = N'AutoBackup_QLVanChuyen';
+GO
+
+-- =========================
+-- 12) TRUY VẤN KIỂM TRA / THÔNG TIN BẢNG
+-- =========================
+USE QLVanChuyen;
+GO
+SELECT TOP 100 * FROM KHACHHANG;
+SELECT TOP 100 * FROM DONHANG;
+SELECT TOP 100 * FROM PHUONGTIEN;
+SELECT TOP 100 * FROM GIAOHANG;
+SELECT TOP 100 * FROM CHIPHI;
+SELECT TOP 100 * FROM vThongTinVanChuyen;
+GO
+
+
